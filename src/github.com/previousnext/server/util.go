@@ -20,6 +20,7 @@ func splitUser(u string) (string, string, string, string, error) {
 	return "", "", "", "", fmt.Errorf("Failed to marshal string: %s", u)
 }
 
+// Helper function to determine if the command = shell.
 func isShell(cmd []string) bool {
 	if len(cmd) == 0 {
 		return true
@@ -27,6 +28,7 @@ func isShell(cmd []string) bool {
 	return false
 }
 
+// Helper function to determine if user is rsyncing.
 func isRsync(cmd []string) bool {
 	if len(cmd) > 0 && cmd[0] == "rsync" {
 		return true
