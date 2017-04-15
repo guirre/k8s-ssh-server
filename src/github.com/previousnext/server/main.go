@@ -73,7 +73,7 @@ func main() {
 		}
 
 		// This will handle "shell" calls.
-		if len(cmd.Command) == 0 {
+		if isShell(cmd.Command) {
 			logger.Print(fmt.Sprintf("Detected SHELL for: %s", user))
 
 			// Provide a fully featured shell from the remote environment.
@@ -82,25 +82,24 @@ func main() {
 				"/bin/bash",
 			}
 
-			// Allow TTY.
 			cmd.TTY = true
-			opts.Tty = true
-
-			// Allow Input from the users CLI.
 			cmd.Stdin = true
 			opts.Stdin = s
+			opts.Tty = true
 		}
 
 		// This will handle rsync support eg. stdin for syncing.
-		if cmd.Command[0] == "rsync" {
+		if isRsync(cmd.Command) {
 			logger.Print(fmt.Sprintf("Detected rsync mode for: %s", user))
 			cmd.Stdin = true
+			cmd.TTY = false
 			opts.Stdin = s
+			opts.Tty = false
 		}
 
 		exec, err := remotecommand.NewExecutor(config, "POST", sshClient.Url(namespace, pod, container, cmd))
 		if err != nil {
-			logger.Print(fmt.Sprintf("Failed to run command - %s - '%s' - %s", user, strings.Join(cmd.Command, " "), err.Error()))
+			logger.Print(fmt.Sprintf("Failed to run command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
 			// Return the error code output to the end user so they can see why the request failed.
 			io.WriteString(s, err.Error())
@@ -111,11 +110,11 @@ func main() {
 			return
 		}
 
-		logger.Print(fmt.Sprintf("Executing command - %s - '%s'", user, strings.Join(cmd.Command, " ")))
+		logger.Print(fmt.Sprintf("Executing command '%s'", strings.Join(cmd.Command, " ")))
 
 		err = exec.Stream(opts)
 		if err != nil {
-			logger.Print(fmt.Sprintf("Failed to stream command - %s - '%s' - %s", user, strings.Join(cmd.Command, " "), err.Error()))
+			logger.Print(fmt.Sprintf("Failed to stream command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
 			// Return the error code output to the end user so they can see why the request failed.
 			io.WriteString(s, err.Error())

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Used for mashalling a username.
+// Used for mashalling a ssh username into
 //  * Namespace
 //  * Pod
 //  * Container
@@ -18,4 +18,18 @@ func splitUser(u string) (string, string, string, string, error) {
 	}
 
 	return "", "", "", "", fmt.Errorf("Failed to marshal string: %s", u)
+}
+
+func isShell(cmd []string) bool {
+	if len(cmd) == 0 {
+		return true
+	}
+	return false
+}
+
+func isRsync(cmd []string) bool {
+	if len(cmd) > 0 && cmd[0] == "rsync" {
+		return true
+	}
+	return false
 }
