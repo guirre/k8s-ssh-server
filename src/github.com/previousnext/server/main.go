@@ -123,10 +123,10 @@ func main() {
 		}
 	})
 
-	publicKeyHandler := ssh.PublicKeyAuth(func(rawUser string, key ssh.PublicKey) bool {
-		namespace, _, _, user, err := splitUser(rawUser)
+	publicKeyHandler := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		namespace, _, _, user, err := splitUser(ctx.User())
 		if err != nil {
-			fmt.Println("Failed to get namespace, pod and container from user:", rawUser)
+			fmt.Println("Failed to get namespace, pod and container from user:", err)
 			return false
 		}
 
