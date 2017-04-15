@@ -82,8 +82,8 @@ func main() {
 				"/bin/bash",
 			}
 
-			cmd.TTY = true
 			cmd.Stdin = true
+			cmd.TTY = true
 			opts.Stdin = s
 			opts.Tty = true
 		}
