@@ -1,0 +1,7 @@
+apiVersion: "skpr.io/v1"
+kind: SshUser
+metadata:
+  namespace: ssh-test
+  name: nick
+spec:
+  authorizedKey: "PUT YOUR PUBLIC KEY HERE"

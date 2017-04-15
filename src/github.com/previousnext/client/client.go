@@ -5,10 +5,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
+	client "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 )
 
 const (
@@ -19,6 +19,7 @@ const (
 
 type Client struct {
 	rc *rest.RESTClient
+	cs *client.Clientset
 }
 
 // Create a client for SSH User interactions.
@@ -34,10 +35,13 @@ func NewClient(config *rest.Config) (Client, error) {
 	// We will use this client for Get() and List() operations.
 	c.rc = rc
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := client.NewForConfig(config)
 	if err != nil {
 		return c, err
 	}
+
+	// This client will allow us to perform Kubernetes operations.
+	c.cs = clientset
 
 	// Create a K8s Third Party Resource object.
 	// This allows us to start creating Solr objects under a bespoke, K8s backed, API.
@@ -95,5 +99,5 @@ func (c *Client) ListAll() (SshUserList, error) {
 }
 
 func (c *Client) Url(namespace, pod, container string, cmd *api.PodExecOptions) *url.URL {
-	return c.rc.Post().Resource("pods").Name(pod).Namespace(namespace).SubResource("exec").Param("container", container).VersionedParams(cmd, api.ParameterCodec).URL()
+	return c.cs.Core().RESTClient().Post().Resource("pods").Name(pod).Namespace(namespace).SubResource("exec").Param("container", container).VersionedParams(cmd, api.ParameterCodec).URL()
 }
