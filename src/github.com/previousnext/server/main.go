@@ -69,7 +69,7 @@ func main() {
 		opts := remotecommand.StreamOptions{
 			SupportedProtocols: remotecommandserver.SupportedStreamingProtocols,
 			Stdout:             s,
-			Stderr:             s,
+			Stderr:             s.Stderr(),
 		}
 
 		// This will handle "shell" calls.
