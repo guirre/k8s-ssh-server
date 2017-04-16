@@ -39,20 +39,20 @@ func main() {
 		panic(err)
 	}
 
-	ssh.Handle(func(s ssh.Session) {
+	ssh.Handle(func(sess ssh.Session) {
 		// Generate a unique ID for this request.
 		// This will be used for logging connections.
 		logger := log.New()
 
-		namespace, pod, container, user, err := splitUser(s.User())
+		namespace, pod, container, user, err := splitUser(sess.User())
 		if err != nil {
 			logger.Print(fmt.Sprintf("Failed to get namespace, pod and container from user: %s", user))
 
 			// Return the error code output to the end user so they can see why the request failed.
-			io.WriteString(s, err.Error())
+			io.WriteString(sess, err.Error())
 
 			// This will send an error code back to the SSH client.
-			s.Exit(1)
+			sess.Exit(1)
 
 			return
 		}
@@ -64,12 +64,12 @@ func main() {
 			Container: container,
 			Stdout:    true,
 			Stderr:    true,
-			Command:   s.Command(),
+			Command:   sess.Command(),
 		}
 		opts := remotecommand.StreamOptions{
 			SupportedProtocols: remotecommandserver.SupportedStreamingProtocols,
-			Stdout:             s,
-			Stderr:             s.Stderr(),
+			Stdout:             sess,
+			Stderr:             sess.Stderr(),
 		}
 
 		// This will handle "shell" calls.
@@ -84,7 +84,7 @@ func main() {
 
 			cmd.Stdin = true
 			cmd.TTY = true
-			opts.Stdin = s
+			opts.Stdin = sess
 			opts.Tty = true
 		}
 
@@ -93,8 +93,13 @@ func main() {
 			logger.Print(fmt.Sprintf("Detected rsync mode for: %s", user))
 			cmd.Stdin = true
 			cmd.TTY = false
-			opts.Stdin = s
+			opts.Stdin = sess
 			opts.Tty = false
+		}
+
+		if cmd.TTY {
+			sizeQueue := NewResizeQueue(sess)
+			opts.TerminalSizeQueue = sizeQueue
 		}
 
 		exec, err := remotecommand.NewExecutor(config, "POST", sshClient.Url(namespace, pod, container, cmd))
@@ -102,10 +107,10 @@ func main() {
 			logger.Print(fmt.Sprintf("Failed to run command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
 			// Return the error code output to the end user so they can see why the request failed.
-			io.WriteString(s, err.Error())
+			io.WriteString(sess, err.Error())
 
 			// This will send an error code back to the SSH client.
-			s.Exit(1)
+			sess.Exit(1)
 
 			return
 		}
@@ -117,10 +122,10 @@ func main() {
 			logger.Print(fmt.Sprintf("Failed to stream command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
 			// Return the error code output to the end user so they can see why the request failed.
-			io.WriteString(s, err.Error())
+			io.WriteString(sess, err.Error())
 
 			// This will send an error code back to the SSH client.
-			s.Exit(1)
+			sess.Exit(1)
 
 			return
 		}
