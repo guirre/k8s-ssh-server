@@ -25,13 +25,9 @@ func main() {
 
 	fmt.Println("Starting SSH Server")
 
-	/*config, err := rest.InClusterConfig()
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
-	}*/
-
-	config := &rest.Config{
-		Host: "http://localhost:8080",
 	}
 
 	sshClient, err := sshclient.NewClient(config)
