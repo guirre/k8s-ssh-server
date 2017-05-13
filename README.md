@@ -21,7 +21,7 @@ $ kubectl -n ssh-server create -f examples/ssh-server.yaml
 $ kubectl -n ssh-server create -f examples/deployment.yaml
 
 # Make sure to update the authorized key value. 
-$ kubectl -n ssh-server create -f examples/ssh-server.yaml
+$ kubectl -n ssh-server create -f examples/ssh.yaml
 
 # Get a list of the pods, update the POD value in the ssh command.
 $ kubectl -n ssh-server get pods
