@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/gliderlabs/ssh"
+	gossh "golang.org/x/crypto/ssh"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/client/unversioned/remotecommand"
@@ -18,7 +20,10 @@ import (
 
 const separator = "~"
 
-var cliPort = kingpin.Flag("port", "Port to receive SSH requests").Default("22").OverrideDefaultFromEnvar("PORT").String()
+var (
+	cliListen = kingpin.Flag("listen", "Port to receive SSH requests").Default(":22").OverrideDefaultFromEnvar("LISTEN").String()
+	cliSigner = kingpin.Flag("signer", "Path to signer certificate").OverrideDefaultFromEnvar("SIGNER").String()
+)
 
 func main() {
 	kingpin.Parse()
@@ -33,6 +38,10 @@ func main() {
 	sshClient, err := sshclient.NewClient(config)
 	if err != nil {
 		panic(err)
+	}
+
+	srv := &ssh.Server{
+		Addr: *cliListen,
 	}
 
 	ssh.Handle(func(sess ssh.Session) {
@@ -148,8 +157,24 @@ func main() {
 
 		return ssh.KeysEqual(key, allowed)
 	})
+	srv.SetOption(publicKeyHandler)
 
-	err = ssh.ListenAndServe(":"+*cliPort, nil, publicKeyHandler)
+	// Check if a signer was provided, if one was, load it and add to the server.
+	if cliSigner != nil {
+		file, err := ioutil.ReadFile(*cliSigner)
+		if err != nil {
+			panic(err)
+		}
+
+		signer, err := gossh.ParsePrivateKey(file)
+		if err != nil {
+			panic(err)
+		}
+
+		srv.HostSigners = append(srv.HostSigners, signer)
+	}
+
+	err = srv.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
