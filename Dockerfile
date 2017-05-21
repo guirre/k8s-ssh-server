@@ -5,7 +5,7 @@ ADD hack /go/hack
 ADD src /go/src
 ADD vendor /go/vendor
 
-RUN make make server cli github-sync && \
+RUN make server cli github-sync && \
       mv bin/linux/cli/ssh-cli /usr/local/bin/cli && \
       mv bin/linux/cli/github-sync /usr/local/bin/github-sync && \
       mv bin/linux/server/ssh-server /usr/local/bin/ssh-server && \
