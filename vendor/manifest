@@ -2,93 +2,11 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/alecthomas/kingpin",
-			"repository": "https://github.com/alecthomas/kingpin",
-			"revision": "7f0871f2e17818990e4eed73f9b5c2f429501228",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/alecthomas/template",
-			"repository": "https://github.com/alecthomas/template",
-			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/alecthomas/units",
-			"repository": "https://github.com/alecthomas/units",
-			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/anmitsu/go-shlex",
-			"repository": "https://github.com/anmitsu/go-shlex",
-			"revision": "648efa622239a2f6ff949fed78ee37b48d499ba4",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/ausrasul/hashgen",
-			"repository": "https://github.com/ausrasul/hashgen",
-			"revision": "31f0ada85f7f121207fe1ee637d23d84247f7889",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/gliderlabs/ssh",
-			"repository": "https://github.com/gliderlabs/ssh",
-			"revision": "1051a0d154ae729be91577f52b76f5806763a1f9",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/google/go-github/github",
-			"repository": "https://github.com/google/go-github",
-			"revision": "de33c46a823d3f723514fc5333b75ef2e937b7df",
-			"branch": "master",
-			"path": "/github"
-		},
-		{
 			"importpath": "github.com/google/go-querystring/query",
 			"repository": "https://github.com/google/go-querystring",
 			"revision": "53e6ce116135b80d037921a7fdd5138cf32d7a8a",
 			"branch": "master",
 			"path": "/query"
-		},
-		{
-			"importpath": "github.com/gosuri/uitable",
-			"repository": "https://github.com/gosuri/uitable",
-			"revision": "36ee7e946282a3fb1cfecd476ddc9b35d8847e42",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/mattn/go-runewidth",
-			"repository": "https://github.com/mattn/go-runewidth",
-			"revision": "14207d285c6c197daabb5c9793d63e7af9ab2d50",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/vaughan0/go-ini",
-			"repository": "https://github.com/vaughan0/go-ini",
-			"revision": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1",
-			"branch": "master"
-		},
-		{
-			"importpath": "golang.org/x/crypto/curve25519",
-			"repository": "https://go.googlesource.com/crypto",
-			"revision": "cbc3d0884eac986df6e78a039b8792e869bff863",
-			"branch": "master",
-			"path": "/curve25519"
-		},
-		{
-			"importpath": "golang.org/x/crypto/ed25519",
-			"repository": "https://go.googlesource.com/crypto",
-			"revision": "cbc3d0884eac986df6e78a039b8792e869bff863",
-			"branch": "master",
-			"path": "/ed25519"
-		},
-		{
-			"importpath": "golang.org/x/crypto/ssh",
-			"repository": "https://go.googlesource.com/crypto",
-			"revision": "cbc3d0884eac986df6e78a039b8792e869bff863",
-			"branch": "master",
-			"path": "/ssh"
 		}
 	]
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type SshUserSpec struct {
-	AuthorizedKey string `json:"authorizedKey"`
+	AuthorizedKeys []string `json:"authorizedKeys"`
 }
 
 type SshUser struct {

@@ -149,13 +149,19 @@ func main() {
 			return false
 		}
 
-		allowed, _, _, _, err := ssh.ParseAuthorizedKey([]byte(sshUser.Spec.AuthorizedKey))
-		if err != nil {
-			fmt.Println("Failed to parse key:", err)
-			return false
+		for _, authorizedKey := range sshUser.Spec.AuthorizedKeys {
+			allowed, _, _, _, err := ssh.ParseAuthorizedKey([]byte(authorizedKey))
+			if err != nil {
+				fmt.Println("Failed to parse key:", err)
+				return false
+			}
+
+			if ssh.KeysEqual(key, allowed) {
+				return true
+			}
 		}
 
-		return ssh.KeysEqual(key, allowed)
+		return false
 	})
 	srv.SetOption(publicKeyHandler)
 
