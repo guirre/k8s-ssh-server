@@ -78,6 +78,11 @@ func (c *Client) Post(user SshUser) error {
 	return c.rc.Post().Resource(Resource).Namespace(user.Metadata.Namespace).Body(&user).Do().Error()
 }
 
+// Delete the entire SSH User.
+func (c *Client) Delete(namespace, name string) error {
+	return c.rc.Delete().Resource(Resource).Namespace(namespace).Name(name).Do().Error()
+}
+
 // Returns a list of SSH Users from all namespaces.
 func (c *Client) List(namespace string) (SshUserList, error) {
 	s := SshUserList{}

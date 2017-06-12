@@ -1,15 +1,15 @@
 #!/usr/bin/make -f
 
-server:
-	./hack/build.sh linux server ssh-server github.com/previousnext/server
+VERSION=latest
 
-cli:
-	./hack/build.sh linux cli ssh-cli github.com/previousnext/cli
+release: build push
 
-github-sync:
-	./hack/build.sh linux cli github-sync github.com/previousnext/github-sync
+build:
+	docker build -f dockerfiles/server/Dockerfile -t previousnext/k8s-ssh-server:${VERSION} .
+	docker build -f dockerfiles/github-sync/Dockerfile -t previousnext/k8s-ssh-server-gh:${VERSION} .
 
-docker:
-	docker build -t previousnext/k8s-ssh-server .
+push:
+	docker push previousnext/k8s-ssh-server:${VERSION}
+	docker push previousnext/k8s-ssh-server-gh:${VERSION}
 
-.PHONY: build docker
+.PHONY: release build push

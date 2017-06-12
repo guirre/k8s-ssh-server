@@ -9,27 +9,15 @@ A ThirdPartyResource SSH Server for connecting to containers on a Kubernetes clu
 * Window resizing
 * Works with rsync
 
-## Testing
+## Release
+
+By default `make release` will tag images as "latest".
+
+To pick a version (**and you should!**) run the following command which will:
+
+* Make new images
+* Push them to the Docker Hub
 
 ```bash
-$ kubectl create -f ssh-server
-
-# Deploy this ssh server.
-$ kubectl -n ssh-server create -f examples/ssh-server.yaml
-
-# Create some containers to test shell access.
-$ kubectl -n ssh-server create -f examples/deployment.yaml
-
-# Make sure to update the authorized key value. 
-$ kubectl -n ssh-server create -f examples/ssh.yaml
-
-# Get a list of the pods, update the POD value in the ssh command.
-$ kubectl -n ssh-server get pods
-$ ssh ssh-server~POD~nginx~nick@localhost -p 2222
-```
-
-## Building
-
-```bash
-$ make
+make release VERSION=0.0.1
 ```
