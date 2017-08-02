@@ -14,8 +14,8 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned/remotecommand"
 	remotecommandserver "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
 
-	sshclient "github.com/previousnext/client"
-	"github.com/previousnext/log"
+	sshclient "github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/log"
 )
 
 const separator = "~"

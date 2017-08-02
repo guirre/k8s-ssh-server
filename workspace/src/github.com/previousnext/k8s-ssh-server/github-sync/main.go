@@ -8,7 +8,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/google/go-github/github"
-	sshclient "github.com/previousnext/client"
+	sshclient "github.com/previousnext/k8s-ssh-server/client"
 	"golang.org/x/oauth2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -19,7 +19,7 @@ var (
 	cliToken     = kingpin.Flag("token", "Github token for authentication").OverrideDefaultFromEnvar("TOKEN").String()
 	cliOrg       = kingpin.Flag("org", "Organisation members to sync").OverrideDefaultFromEnvar("ORG").String()
 	cliExclude   = kingpin.Flag("exclude", "A list of namespaces to skip").Default("kube-system,kube-public").OverrideDefaultFromEnvar("EXCLUDE").String()
-	cliFrequency = kingpin.Flag("frequency", "How often to sync Github users").Default("120").OverrideDefaultFromEnvar("FREQUENCY").Duration()
+	cliFrequency = kingpin.Flag("frequency", "How often to sync Github users").Default("120s").OverrideDefaultFromEnvar("FREQUENCY").Duration()
 )
 
 func main() {
