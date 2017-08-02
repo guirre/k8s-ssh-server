@@ -11,7 +11,7 @@ import (
 // Helper function to configure the client used by client implementors.
 func sshUserConfig(config *rest.Config) *rest.Config {
 	groupversion := schema.GroupVersion{
-		Group:   Group,
+		Group:   apiGroup,
 		Version: "v1",
 	}
 

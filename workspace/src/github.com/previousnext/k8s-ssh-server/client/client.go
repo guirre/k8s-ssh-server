@@ -12,18 +12,19 @@ import (
 )
 
 const (
-	API      = "ssh-user"
-	Group    = "skpr.io"
-	Resource = "sshusers"
+	apiName  = "ssh-user"
+	apiGroup = "skpr.io"
+	resource = "sshusers"
 )
 
+// Client used for interacting with the "k8s-ssh-server" third party resource.
 type Client struct {
 	rc *rest.RESTClient
 	cs *client.Clientset
 }
 
-// Create a client for SSH User interactions.
-func NewClient(config *rest.Config) (Client, error) {
+// New is used for setting up the Third Party Resource and returning a client.
+func New(config *rest.Config) (Client, error) {
 	var c Client
 
 	rc, err := rest.RESTClientFor(sshUserConfig(config))
@@ -47,7 +48,7 @@ func NewClient(config *rest.Config) (Client, error) {
 	// This allows us to start creating Solr objects under a bespoke, K8s backed, API.
 	_, err = clientset.Extensions().ThirdPartyResources().Create(&v1beta1.ThirdPartyResource{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: API + "." + Group,
+			Name: apiName + "." + apiGroup,
 		},
 		Versions: []v1beta1.APIVersion{
 			{Name: "v1"},
@@ -61,48 +62,49 @@ func NewClient(config *rest.Config) (Client, error) {
 	return c, nil
 }
 
-// Returns a single SSH User for a Namespace.
+// Get returns a single SSH User for a Namespace.
 func (c *Client) Get(namespace, name string) (SshUser, error) {
 	var s SshUser
-	err := c.rc.Get().Resource(Resource).Namespace(namespace).Name(name).Do().Into(&s)
+	err := c.rc.Get().Resource(resource).Namespace(namespace).Name(name).Do().Into(&s)
 	return s, err
 }
 
-// Sets the entire SSH User (Spec + Status) if it exists.
+// Put sets the entire SSH User (Spec + Status) if it exists.
 func (c *Client) Put(user SshUser) error {
-	return c.rc.Put().Resource(Resource).Namespace(user.Metadata.Namespace).Name(user.Metadata.Name).Body(&user).Do().Error()
+	return c.rc.Put().Resource(resource).Namespace(user.Metadata.Namespace).Name(user.Metadata.Name).Body(&user).Do().Error()
 }
 
-// Sets the entire SSH User (Spec + Status).
+// Post sets the entire SSH User (Spec + Status).
 func (c *Client) Post(user SshUser) error {
-	return c.rc.Post().Resource(Resource).Namespace(user.Metadata.Namespace).Body(&user).Do().Error()
+	return c.rc.Post().Resource(resource).Namespace(user.Metadata.Namespace).Body(&user).Do().Error()
 }
 
 // Delete the entire SSH User.
 func (c *Client) Delete(namespace, name string) error {
-	return c.rc.Delete().Resource(Resource).Namespace(namespace).Name(name).Do().Error()
+	return c.rc.Delete().Resource(resource).Namespace(namespace).Name(name).Do().Error()
 }
 
-// Returns a list of SSH Users from all namespaces.
+// List returns a list of SSH Users from all namespaces.
 func (c *Client) List(namespace string) (SshUserList, error) {
 	s := SshUserList{}
-	err := c.rc.Get().Resource(Resource).Namespace(namespace).Do().Into(&s)
+	err := c.rc.Get().Resource(resource).Namespace(namespace).Do().Into(&s)
 	if err != nil {
 		return s, err
 	}
 	return s, nil
 }
 
-// Returns a list of SSH Users from all namespaces.
+// ListAll returns a list of SSH Users from all namespaces.
 func (c *Client) ListAll() (SshUserList, error) {
 	s := SshUserList{}
-	err := c.rc.Get().Resource(Resource).Do().Into(&s)
+	err := c.rc.Get().Resource(resource).Do().Into(&s)
 	if err != nil {
 		return s, err
 	}
 	return s, nil
 }
 
-func (c *Client) Url(namespace, pod, container string, cmd *api.PodExecOptions) *url.URL {
+// URL returns a url to the resource.
+func (c *Client) URL(namespace, pod, container string, cmd *api.PodExecOptions) *url.URL {
 	return c.cs.Core().RESTClient().Post().Resource("pods").Name(pod).Namespace(namespace).SubResource("exec").Param("container", container).VersionedParams(cmd, api.ParameterCodec).URL()
 }
