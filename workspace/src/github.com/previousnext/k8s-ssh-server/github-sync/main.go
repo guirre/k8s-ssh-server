@@ -8,7 +8,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/google/go-github/github"
-	sshclient "github.com/previousnext/client"
+	sshclient "github.com/previousnext/k8s-ssh-server/client"
 	"golang.org/x/oauth2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -19,7 +19,7 @@ var (
 	cliToken     = kingpin.Flag("token", "Github token for authentication").OverrideDefaultFromEnvar("TOKEN").String()
 	cliOrg       = kingpin.Flag("org", "Organisation members to sync").OverrideDefaultFromEnvar("ORG").String()
 	cliExclude   = kingpin.Flag("exclude", "A list of namespaces to skip").Default("kube-system,kube-public").OverrideDefaultFromEnvar("EXCLUDE").String()
-	cliFrequency = kingpin.Flag("frequency", "How often to sync Github users").Default("120").OverrideDefaultFromEnvar("FREQUENCY").Duration()
+	cliFrequency = kingpin.Flag("frequency", "How often to sync Github users").Default("120s").OverrideDefaultFromEnvar("FREQUENCY").Duration()
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 			panic(err)
 		}
 
-		sshClient, err := sshclient.NewClient(config)
+		sshClient, err := sshclient.New(config)
 		if err != nil {
 			panic(err)
 		}
@@ -105,8 +105,8 @@ func main() {
 	}
 }
 
-func getGithubKeys(token, org string) ([]sshclient.SshUser, error) {
-	var users []sshclient.SshUser
+func getGithubKeys(token, org string) ([]sshclient.SSHUser, error) {
+	var users []sshclient.SSHUser
 
 	gh := github.NewClient(oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(
 		&oauth2.Token{
@@ -121,7 +121,7 @@ func getGithubKeys(token, org string) ([]sshclient.SshUser, error) {
 
 	// Loop over the members, look up their ssh keys and add to all namespaces.
 	for _, member := range members {
-		user := sshclient.SshUser{
+		user := sshclient.SSHUser{
 			Metadata: metav1.ObjectMeta{
 				Name: strings.ToLower(*member.Login),
 			},
@@ -142,7 +142,7 @@ func getGithubKeys(token, org string) ([]sshclient.SshUser, error) {
 	return users, nil
 }
 
-func userExists(user sshclient.SshUser, existingUsers []sshclient.SshUser) bool {
+func userExists(user sshclient.SSHUser, existingUsers []sshclient.SSHUser) bool {
 	for _, existingUser := range existingUsers {
 		if existingUser.Metadata.Name == user.Metadata.Name {
 			return true

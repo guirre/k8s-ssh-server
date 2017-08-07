@@ -7,7 +7,7 @@ import (
 	"github.com/gosuri/uitable"
 	"k8s.io/client-go/rest"
 
-	sshclient "github.com/previousnext/client"
+	sshclient "github.com/previousnext/k8s-ssh-server/client"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	sshClient, err := sshclient.NewClient(config)
+	sshClient, err := sshclient.New(config)
 	if err != nil {
 		panic(err)
 	}

@@ -14,8 +14,8 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned/remotecommand"
 	remotecommandserver "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
 
-	sshclient "github.com/previousnext/client"
-	"github.com/previousnext/log"
+	sshclient "github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/log"
 )
 
 const separator = "~"
@@ -35,7 +35,7 @@ func main() {
 		panic(err)
 	}
 
-	sshClient, err := sshclient.NewClient(config)
+	sshClient, err := sshclient.New(config)
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +107,7 @@ func main() {
 			opts.TerminalSizeQueue = sizeQueue
 		}
 
-		exec, err := remotecommand.NewExecutor(config, "POST", sshClient.Url(namespace, pod, container, cmd))
+		exec, err := remotecommand.NewExecutor(config, "POST", sshClient.URL(namespace, pod, container, cmd))
 		if err != nil {
 			logger.Print(fmt.Sprintf("Failed to run command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 

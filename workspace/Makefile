@@ -1,12 +1,23 @@
 #!/usr/bin/make -f
 
-server:
-	./hack/build.sh linux server ssh-server github.com/previousnext/server
+# This allows us to have a GOPATH per peroject.
+# Ensuring that we are all building with the same dependencies.
+GOPATH := $(shell pwd):$(shell pwd)/vendor
+export GOPATH
 
-cli:
-	./hack/build.sh linux cli ssh-cli github.com/previousnext/cli
+NAME=k8s-ssh-server
+PACKAGE=github.com/previousnext/$(NAME)
 
-github-sync:
-	./hack/build.sh linux server github-sync github.com/previousnext/github-sync
+# Build binaries for linux/amd64 and darwin/amd64
+build:
+	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-gh-sync_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/github-sync
+	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-cli_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/cli
+	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-server_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/server
 
-.PHONY: server cli github-sync
+# Run all lint checking with exit codes for CI
+lint:
+	golint -set_exit_status $(PACKAGE)/...
+
+# Run tests with coverage reporting
+test:
+	go test -cover $(PACKAGE)/...
