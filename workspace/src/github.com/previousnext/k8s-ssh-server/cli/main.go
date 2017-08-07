@@ -16,7 +16,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	sshClient, err := sshclient.NewClient(config)
+	sshClient, err := sshclient.New(config)
 	if err != nil {
 		panic(err)
 	}

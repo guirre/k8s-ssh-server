@@ -63,19 +63,19 @@ func New(config *rest.Config) (Client, error) {
 }
 
 // Get returns a single SSH User for a Namespace.
-func (c *Client) Get(namespace, name string) (SshUser, error) {
-	var s SshUser
+func (c *Client) Get(namespace, name string) (SSHUser, error) {
+	var s SSHUser
 	err := c.rc.Get().Resource(resource).Namespace(namespace).Name(name).Do().Into(&s)
 	return s, err
 }
 
 // Put sets the entire SSH User (Spec + Status) if it exists.
-func (c *Client) Put(user SshUser) error {
+func (c *Client) Put(user SSHUser) error {
 	return c.rc.Put().Resource(resource).Namespace(user.Metadata.Namespace).Name(user.Metadata.Name).Body(&user).Do().Error()
 }
 
 // Post sets the entire SSH User (Spec + Status).
-func (c *Client) Post(user SshUser) error {
+func (c *Client) Post(user SSHUser) error {
 	return c.rc.Post().Resource(resource).Namespace(user.Metadata.Namespace).Body(&user).Do().Error()
 }
 
@@ -85,8 +85,8 @@ func (c *Client) Delete(namespace, name string) error {
 }
 
 // List returns a list of SSH Users from all namespaces.
-func (c *Client) List(namespace string) (SshUserList, error) {
-	s := SshUserList{}
+func (c *Client) List(namespace string) (SSHUserList, error) {
+	s := SSHUserList{}
 	err := c.rc.Get().Resource(resource).Namespace(namespace).Do().Into(&s)
 	if err != nil {
 		return s, err
@@ -95,8 +95,8 @@ func (c *Client) List(namespace string) (SshUserList, error) {
 }
 
 // ListAll returns a list of SSH Users from all namespaces.
-func (c *Client) ListAll() (SshUserList, error) {
-	s := SshUserList{}
+func (c *Client) ListAll() (SSHUserList, error) {
+	s := SSHUserList{}
 	err := c.rc.Get().Resource(resource).Do().Into(&s)
 	if err != nil {
 		return s, err
