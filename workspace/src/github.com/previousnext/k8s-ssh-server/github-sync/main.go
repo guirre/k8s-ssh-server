@@ -33,7 +33,9 @@ func main() {
 		// Load all the users we will be syncing to Kubernetes.
 		users, err := getGithubKeys(*cliToken, *cliOrg)
 		if err != nil {
-			panic(err)
+			// If Github is down, wait until the next loop.
+			fmt.Println("Failed to lookup Github keys:", err)
+			continue
 		}
 
 		config, err := rest.InClusterConfig()
