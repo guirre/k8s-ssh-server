@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-VERSION=latest
+VERSION=$(shell git describe --tags --always)
 
 release: build push
 
