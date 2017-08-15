@@ -8,72 +8,72 @@ import (
 )
 
 // SSHUserSpec is used for defining a user.
-type SSHUserSpec struct {
+type SshUserSpec struct {
 	AuthorizedKeys []string `json:"authorizedKeys"`
 }
 
 // SSHUser is our high level object being stored in Kubernetes.
-type SSHUser struct {
+type SshUser struct {
 	metav1.TypeMeta `json:",inline"`
 	Metadata        metav1.ObjectMeta `json:"metadata"`
 
-	Spec SSHUserSpec `json:"spec"`
+	Spec SshUserSpec `json:"spec"`
 }
 
 // SSHUserList is a list of our Kubernetes objects.
-type SSHUserList struct {
+type SshUserList struct {
 	metav1.TypeMeta `json:",inline"`
 	Metadata        metav1.ListMeta `json:"metadata"`
 
-	Items []SSHUser `json:"items"`
+	Items []SshUser `json:"items"`
 }
 
 // GetObjectKind is required to satisfy Object interface
-func (e *SSHUser) GetObjectKind() schema.ObjectKind {
+func (e *SshUser) GetObjectKind() schema.ObjectKind {
 	return &e.TypeMeta
 }
 
 // GetObjectMeta is required to satisfy ObjectMetaAccessor interface
-func (e *SSHUser) GetObjectMeta() metav1.Object {
+func (e *SshUser) GetObjectMeta() metav1.Object {
 	return &e.Metadata
 }
 
 // GetObjectKind is required to satisfy Object interface
-func (el *SSHUserList) GetObjectKind() schema.ObjectKind {
+func (el *SshUserList) GetObjectKind() schema.ObjectKind {
 	return &el.TypeMeta
 }
 
 // GetListMeta is required to satisfy ListMetaAccessor interface
-func (el *SSHUserList) GetListMeta() metav1.List {
+func (el *SshUserList) GetListMeta() metav1.List {
 	return &el.Metadata
 }
 
-// SSHUserListCopy is used for unmarshalling data.
-type SSHUserListCopy SSHUserList
+// SshUserListCopy is used for unmarshalling data.
+type SshUserListCopy SshUserList
 
-// SSHUserCopy is used for unmarshalling data.
-type SSHUserCopy SSHUser
+// SshUserCopy is used for unmarshalling data.
+type SshUserCopy SshUser
 
 // UnmarshalJSON is used for unmarshalling objects.
-func (e *SSHUser) UnmarshalJSON(data []byte) error {
-	tmp := SSHUserCopy{}
+func (e *SshUser) UnmarshalJSON(data []byte) error {
+	tmp := SshUserCopy{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
-	tmp2 := SSHUser(tmp)
+	tmp2 := SshUser(tmp)
 	*e = tmp2
 	return nil
 }
 
 // UnmarshalJSON is used for unmarshalling objects.
-func (el *SSHUserList) UnmarshalJSON(data []byte) error {
-	tmp := SSHUserListCopy{}
+func (el *SshUserList) UnmarshalJSON(data []byte) error {
+	tmp := SshUserListCopy{}
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
-	tmp2 := SSHUserList(tmp)
+	tmp2 := SshUserList(tmp)
 	*el = tmp2
 	return nil
 }

@@ -24,8 +24,8 @@ func sshUserConfig(config *rest.Config) *rest.Config {
 		func(scheme *runtime.Scheme) error {
 			scheme.AddKnownTypes(
 				groupversion,
-				&SSHUser{},
-				&SSHUserList{},
+				&SshUser{},
+				&SshUserList{},
 				&api.ListOptions{},
 				&api.DeleteOptions{},
 			)

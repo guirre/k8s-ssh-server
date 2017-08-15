@@ -107,8 +107,8 @@ func main() {
 	}
 }
 
-func getGithubKeys(token, org string) ([]sshclient.SSHUser, error) {
-	var users []sshclient.SSHUser
+func getGithubKeys(token, org string) ([]sshclient.SshUser, error) {
+	var users []sshclient.SshUser
 
 	gh := github.NewClient(oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(
 		&oauth2.Token{
@@ -123,7 +123,7 @@ func getGithubKeys(token, org string) ([]sshclient.SSHUser, error) {
 
 	// Loop over the members, look up their ssh keys and add to all namespaces.
 	for _, member := range members {
-		user := sshclient.SSHUser{
+		user := sshclient.SshUser{
 			Metadata: metav1.ObjectMeta{
 				Name: strings.ToLower(*member.Login),
 			},
@@ -144,7 +144,7 @@ func getGithubKeys(token, org string) ([]sshclient.SSHUser, error) {
 	return users, nil
 }
 
-func userExists(user sshclient.SSHUser, existingUsers []sshclient.SSHUser) bool {
+func userExists(user sshclient.SshUser, existingUsers []sshclient.SshUser) bool {
 	for _, existingUser := range existingUsers {
 		if existingUser.Metadata.Name == user.Metadata.Name {
 			return true
