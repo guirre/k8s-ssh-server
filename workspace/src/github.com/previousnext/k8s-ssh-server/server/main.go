@@ -9,16 +9,15 @@ import (
 	"github.com/alecthomas/kingpin"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
+	"k8s.io/api/core/v1"
+	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/client/unversioned/remotecommand"
-	remotecommandserver "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
+	"k8s.io/client-go/tools/remotecommand"
 
-	sshclient "github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/crd"
 	"github.com/previousnext/k8s-ssh-server/log"
 )
-
-const separator = "~"
 
 var (
 	cliListen = kingpin.Flag("listen", "Port to receive SSH requests").Default(":22").OverrideDefaultFromEnvar("LISTEN").String()
@@ -28,17 +27,29 @@ var (
 func main() {
 	kingpin.Parse()
 
-	fmt.Println("Starting SSH Server")
+	fmt.Println("Installing CRD:", crd.FullCRDName)
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	sshClient, err := sshclient.New(config)
+	clientset, err := apiextcs.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = crd.Create(clientset)
 	if err != nil {
 		panic(err)
 	}
+
+	crdcs, scheme, err := crd.NewClient(config)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Starting SSH Server")
 
 	srv := &ssh.Server{
 		Addr: *cliListen,
@@ -65,16 +76,15 @@ func main() {
 		logger.Print(fmt.Sprintf("Starting connection for user: %s", user))
 
 		// These are default options which will be sent to the Kubernetes API.
-		cmd := &api.PodExecOptions{
+		cmd := &v1.PodExecOptions{
 			Container: container,
 			Stdout:    true,
 			Stderr:    true,
 			Command:   sess.Command(),
 		}
 		opts := remotecommand.StreamOptions{
-			SupportedProtocols: remotecommandserver.SupportedStreamingProtocols,
-			Stdout:             sess,
-			Stderr:             sess.Stderr(),
+			Stdout: sess,
+			Stderr: sess.Stderr(),
 		}
 
 		// This will handle "shell" calls.
@@ -88,8 +98,9 @@ func main() {
 			}
 
 			cmd.Stdin = true
-			cmd.TTY = true
 			opts.Stdin = sess
+
+			cmd.TTY = true
 			opts.Tty = true
 		}
 
@@ -97,9 +108,10 @@ func main() {
 		if isRsync(cmd.Command) {
 			logger.Print(fmt.Sprintf("Detected rsync mode for: %s", user))
 			cmd.Stdin = true
-			cmd.TTY = false
 			opts.Stdin = sess
+
 			opts.Tty = false
+			cmd.TTY = false
 		}
 
 		if cmd.TTY {
@@ -107,7 +119,9 @@ func main() {
 			opts.TerminalSizeQueue = sizeQueue
 		}
 
-		exec, err := remotecommand.NewExecutor(config, "POST", sshClient.URL(namespace, pod, container, cmd))
+		crdclient := client.Client(crdcs, scheme, namespace)
+
+		exec, err := remotecommand.NewExecutor(config, "POST", crdclient.URL(pod, container, cmd))
 		if err != nil {
 			logger.Print(fmt.Sprintf("Failed to run command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
@@ -143,7 +157,9 @@ func main() {
 			return false
 		}
 
-		sshUser, err := sshClient.Get(namespace, user)
+		crdclient := client.Client(crdcs, scheme, namespace)
+
+		sshUser, err := crdclient.Get(user)
 		if err != nil {
 			fmt.Println("Failed to load the user objects:", err)
 			return false

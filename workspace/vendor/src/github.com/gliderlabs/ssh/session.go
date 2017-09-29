@@ -28,6 +28,9 @@ type Session interface {
 	// RemoteAddr returns the net.Addr of the client side of the connection.
 	RemoteAddr() net.Addr
 
+	// LocalAddr returns the net.Addr of the server side of the connection.
+	LocalAddr() net.Addr
+
 	// Environ returns a copy of strings representing the environment set by the
 	// user for this session, in the form "key=value".
 	Environ() []string
@@ -47,6 +50,9 @@ type Session interface {
 	// Context returns the connection's context. The returned context is always
 	// non-nil and holds the same data as the Context passed into auth
 	// handlers and callbacks.
+	//
+	// The context is canceled when the client's connection closes or I/O
+	// operation fails.
 	Context() context.Context
 
 	// Permissions returns a copy of the Permissions object that was available for
@@ -107,7 +113,11 @@ func (sess *session) Write(p []byte) (n int, err error) {
 }
 
 func (sess *session) PublicKey() PublicKey {
-	return sess.ctx.Value(ContextKeyPublicKey).(PublicKey)
+	sessionkey := sess.ctx.Value(ContextKeyPublicKey)
+	if sessionkey == nil {
+		return nil
+	}
+	return sessionkey.(PublicKey)
 }
 
 func (sess *session) Permissions() Permissions {
@@ -141,6 +151,10 @@ func (sess *session) User() string {
 
 func (sess *session) RemoteAddr() net.Addr {
 	return sess.conn.RemoteAddr()
+}
+
+func (sess *session) LocalAddr() net.Addr {
+	return sess.conn.LocalAddr()
 }
 
 func (sess *session) Environ() []string {

@@ -3,108 +3,68 @@ package client
 import (
 	"net/url"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
-	client "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
+	"k8s.io/client-go/tools/cache"
+
+	"github.com/previousnext/k8s-ssh-server/crd"
 )
 
-const (
-	apiName  = "ssh-user"
-	apiGroup = "skpr.io"
-	resource = "sshusers"
-)
+// This file implement all the (CRUD) client methods we need to access our CRD object
 
-// Client used for interacting with the "k8s-ssh-server" third party resource.
-type Client struct {
-	rc *rest.RESTClient
-	cs *client.Clientset
-}
-
-// New is used for setting up the Third Party Resource and returning a client.
-func New(config *rest.Config) (Client, error) {
-	var c Client
-
-	rc, err := rest.RESTClientFor(sshUserConfig(config))
-	if err != nil {
-		return c, err
+func Client(cl *rest.RESTClient, scheme *runtime.Scheme, namespace string) *crdclient {
+	return &crdclient{
+		cl:     cl,
+		ns:     namespace,
+		plural: crd.Plural,
+		codec:  runtime.NewParameterCodec(scheme),
 	}
-
-	// Store the rest client for future queries.
-	// We will use this client for Get() and List() operations.
-	c.rc = rc
-
-	clientset, err := client.NewForConfig(config)
-	if err != nil {
-		return c, err
-	}
-
-	// This client will allow us to perform Kubernetes operations.
-	c.cs = clientset
-
-	// Create a K8s Third Party Resource object.
-	// This allows us to start creating Solr objects under a bespoke, K8s backed, API.
-	_, err = clientset.Extensions().ThirdPartyResources().Create(&v1beta1.ThirdPartyResource{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: apiName + "." + apiGroup,
-		},
-		Versions: []v1beta1.APIVersion{
-			{Name: "v1"},
-		},
-		Description: "A SSH User ThirdPartyResource",
-	})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return c, err
-	}
-
-	return c, nil
 }
 
-// Get returns a single SSH User for a Namespace.
-func (c *Client) Get(namespace, name string) (SshUser, error) {
-	var s SshUser
-	err := c.rc.Get().Resource(resource).Namespace(namespace).Name(name).Do().Into(&s)
-	return s, err
+type crdclient struct {
+	cl     *rest.RESTClient
+	ns     string
+	plural string
+	codec  runtime.ParameterCodec
 }
 
-// Put sets the entire SSH User (Spec + Status) if it exists.
-func (c *Client) Put(user SshUser) error {
-	return c.rc.Put().Resource(resource).Namespace(user.Metadata.Namespace).Name(user.Metadata.Name).Body(&user).Do().Error()
+func (f *crdclient) Create(obj *crd.SSH) (*crd.SSH, error) {
+	var result crd.SSH
+	err := f.cl.Post().Namespace(f.ns).Resource(f.plural).Body(obj).Do().Into(&result)
+	return &result, err
 }
 
-// Post sets the entire SSH User (Spec + Status).
-func (c *Client) Post(user SshUser) error {
-	return c.rc.Post().Resource(resource).Namespace(user.Metadata.Namespace).Body(&user).Do().Error()
+func (f *crdclient) Update(obj *crd.SSH) (*crd.SSH, error) {
+	var result crd.SSH
+	err := f.cl.Put().Namespace(f.ns).Resource(f.plural).Body(obj).Do().Into(&result)
+	return &result, err
 }
 
-// Delete the entire SSH User.
-func (c *Client) Delete(namespace, name string) error {
-	return c.rc.Delete().Resource(resource).Namespace(namespace).Name(name).Do().Error()
+func (f *crdclient) Delete(name string, options *meta_v1.DeleteOptions) error {
+	return f.cl.Delete().Namespace(f.ns).Resource(f.plural).Name(name).Body(options).Do().Error()
 }
 
-// List returns a list of SSH Users from all namespaces.
-func (c *Client) List(namespace string) (SshUserList, error) {
-	s := SshUserList{}
-	err := c.rc.Get().Resource(resource).Namespace(namespace).Do().Into(&s)
-	if err != nil {
-		return s, err
-	}
-	return s, nil
+func (f *crdclient) Get(name string) (*crd.SSH, error) {
+	var result crd.SSH
+	err := f.cl.Get().Namespace(f.ns).Resource(f.plural).Name(name).Do().Into(&result)
+	return &result, err
 }
 
-// ListAll returns a list of SSH Users from all namespaces.
-func (c *Client) ListAll() (SshUserList, error) {
-	s := SshUserList{}
-	err := c.rc.Get().Resource(resource).Do().Into(&s)
-	if err != nil {
-		return s, err
-	}
-	return s, nil
+func (f *crdclient) List(opts meta_v1.ListOptions) (*crd.SSHList, error) {
+	var result crd.SSHList
+	err := f.cl.Get().Namespace(f.ns).Resource(f.plural).VersionedParams(&opts, f.codec).Do().Into(&result)
+	return &result, err
+}
+
+// Create a new List watch for our TPR
+func (f *crdclient) NewListWatch() *cache.ListWatch {
+	return cache.NewListWatchFromClient(f.cl, f.plural, f.ns, fields.Everything())
 }
 
 // URL returns a url to the resource.
-func (c *Client) URL(namespace, pod, container string, cmd *api.PodExecOptions) *url.URL {
-	return c.cs.Core().RESTClient().Post().Resource("pods").Name(pod).Namespace(namespace).SubResource("exec").Param("container", container).VersionedParams(cmd, api.ParameterCodec).URL()
+func (f *crdclient) URL(pod, container string, cmd *v1.PodExecOptions) *url.URL {
+	return f.cl.Post().Resource("pods").Name(pod).Namespace(f.ns).SubResource("exec").Param("container", container).VersionedParams(cmd, meta_v1.ParameterCodec).URL()
 }

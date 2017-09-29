@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const separator = "~"
+
 // Used for mashalling a ssh username into
 //  * Namespace
 //  * Pod
@@ -25,6 +27,7 @@ func isShell(cmd []string) bool {
 	if len(cmd) == 0 {
 		return true
 	}
+
 	return false
 }
 
@@ -33,5 +36,6 @@ func isRsync(cmd []string) bool {
 	if len(cmd) > 0 && cmd[0] == "rsync" {
 		return true
 	}
+
 	return false
 }

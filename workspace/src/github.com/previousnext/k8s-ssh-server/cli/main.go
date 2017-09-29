@@ -5,23 +5,25 @@ import (
 	"strings"
 
 	"github.com/gosuri/uitable"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
-	sshclient "github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/client"
+	"github.com/previousnext/k8s-ssh-server/crd"
 )
 
 func main() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
-	sshClient, err := sshclient.New(config)
+	crdcs, scheme, err := crd.NewClient(config)
 	if err != nil {
 		panic(err)
 	}
 
-	list, err := sshClient.ListAll()
+	list, err := client.Client(crdcs, scheme, "all").List(meta_v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +33,7 @@ func main() {
 
 	table.AddRow("NAMESPACE", "NAME", "KEYS")
 	for _, key := range list.Items {
-		table.AddRow(key.Metadata.Namespace, key.Metadata.Name, strings.Join(key.Spec.AuthorizedKeys, "\n"))
+		table.AddRow(key.Namespace, key.Name, strings.Join(key.Spec.AuthorizedKeys, "\n"))
 	}
 	fmt.Println(table)
 }

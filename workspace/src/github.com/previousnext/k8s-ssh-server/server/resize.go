@@ -2,24 +2,24 @@ package main
 
 import (
 	"github.com/gliderlabs/ssh"
-	"k8s.io/kubernetes/pkg/util/term"
+	"k8s.io/client-go/tools/remotecommand"
 )
 
 // SizeQueue stores window resize events.
 type SizeQueue struct {
-	resizeChan chan term.Size
+	resizeChan chan remotecommand.TerminalSize
 }
 
 // NewResizeQueue returns a size queue for storing window resize events.
 func NewResizeQueue(sess ssh.Session) *SizeQueue {
 	queue := &SizeQueue{
-		resizeChan: make(chan term.Size, 1),
+		resizeChan: make(chan remotecommand.TerminalSize, 1),
 	}
 
 	_, winCh, _ := sess.Pty()
 	go func() {
 		for win := range winCh {
-			queue.resizeChan <- term.Size{
+			queue.resizeChan <- remotecommand.TerminalSize{
 				Height: uint16(win.Height),
 				Width:  uint16(win.Width),
 			}
@@ -30,7 +30,7 @@ func NewResizeQueue(sess ssh.Session) *SizeQueue {
 }
 
 // Next returns the next window resize event.
-func (s *SizeQueue) Next() *term.Size {
+func (s *SizeQueue) Next() *remotecommand.TerminalSize {
 	size, ok := <-s.resizeChan
 	if !ok {
 		return nil
