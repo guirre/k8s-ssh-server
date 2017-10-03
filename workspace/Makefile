@@ -6,14 +6,16 @@ GOPATH := $(shell pwd):$(shell pwd)/vendor
 export GOPATH
 export CGO_ENABLED=0
 
-NAME=k8s-ssh-server
-PACKAGE=github.com/previousnext/$(NAME)
+PACKAGE=github.com/previousnext/k8s-ssh
 
 # Build binaries for linux/amd64 and darwin/amd64
-build:
-	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-gh-sync_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/github-sync
-	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-cli_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/cli
-	gox -os='linux darwin' -arch='amd64' -output='bin/$(NAME)-server_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/server
+build: server githhub
+
+server:
+	gox -os='linux' -arch='amd64' -output='bin/server_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/server
+
+github:
+	gox -os='linux' -arch='amd64' -output='bin/github_{{.OS}}_{{.Arch}}' -ldflags='-extldflags "-static"' $(PACKAGE)/provider/github
 
 # Run all lint checking with exit codes for CI
 # We have to skip "client" because K8s TPRs require camel case eg. SshUser.

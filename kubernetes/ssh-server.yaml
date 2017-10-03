@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: ssh-server
-        image: previousnext/k8s-ssh-server:latest
+        image: previousnext/k8s-ssh:latest
         imagePullPolicy: Always
         ports:
           - containerPort: 22
