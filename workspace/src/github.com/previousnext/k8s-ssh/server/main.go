@@ -1,9 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/alecthomas/kingpin"
@@ -183,13 +188,8 @@ func main() {
 	srv.SetOption(publicKeyHandler)
 
 	// Check if a signer was provided, if one was, load it and add to the server.
-	if cliSigner != nil {
-		file, err := ioutil.ReadFile(*cliSigner)
-		if err != nil {
-			panic(err)
-		}
-
-		signer, err := gossh.ParsePrivateKey(file)
+	if *cliSigner != "" {
+		signer, err := getSigner(*cliSigner)
 		if err != nil {
 			panic(err)
 		}
@@ -201,4 +201,36 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Helper function to generate a signer certificate if one does not exist.
+func getSigner(path string) (ssh.Signer, error) {
+	var signer ssh.Signer
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		key, err := rsa.GenerateKey(rand.Reader, 768)
+		if err != nil {
+			return signer, err
+		}
+
+		priv_der := x509.MarshalPKCS1PrivateKey(key)
+
+		priv_blk := pem.Block{
+			Type:    "RSA PRIVATE KEY",
+			Headers: nil,
+			Bytes:   priv_der,
+		}
+
+		err = ioutil.WriteFile(path, pem.EncodeToMemory(&priv_blk), 0644)
+		if err != nil {
+			return signer, err
+		}
+	}
+
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		return signer, err
+	}
+
+	return gossh.ParsePrivateKey(file)
 }
