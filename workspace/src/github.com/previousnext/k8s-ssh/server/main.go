@@ -27,8 +27,9 @@ import (
 
 var (
 	cliListen = kingpin.Flag("listen", "Port to receive SSH requests").Default(":22").OverrideDefaultFromEnvar("SSH_LISTEN").String()
-	cliSigner = kingpin.Flag("signer", "Path to signer certificate").OverrideDefaultFromEnvar("SSH_SIGNERS").String()
+	cliSigner = kingpin.Flag("signer", "Path to signer certificate").OverrideDefaultFromEnvar("SSH_SIGNER").String()
 	cliShell  = kingpin.Flag("shell", "Shell type to use if the user requests a Shell session").Default("/bin/bash").OverrideDefaultFromEnvar("SSH_SHELL").String()
+	cliK8s    = kingpin.Flag("k8s", "K8s endpoint. If left blank we assume this is 'in cluster' and using K8s native auth").String()
 )
 
 func main() {
@@ -36,9 +37,21 @@ func main() {
 
 	promlog.Info("Installing CRD:", crd.FullCRDName)
 
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		panic(err)
+	var (
+		config *rest.Config
+		err    error
+	)
+
+	if *cliK8s != "" {
+		config = &rest.Config{
+			Host: *cliK8s,
+		}
+	} else {
+		// This must be an deployed to the cluster.
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	clientset, err := apiextcs.NewForConfig(config)

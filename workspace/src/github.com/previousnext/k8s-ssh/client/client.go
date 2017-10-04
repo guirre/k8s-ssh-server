@@ -31,14 +31,14 @@ type crdclient struct {
 	codec  runtime.ParameterCodec
 }
 
-func (f *crdclient) Create(obj *crd.SSH) (*crd.SSH, error) {
-	var result crd.SSH
+func (f *crdclient) Create(obj *crd.SshUser) (*crd.SshUser, error) {
+	var result crd.SshUser
 	err := f.cl.Post().Namespace(f.ns).Resource(f.plural).Body(obj).Do().Into(&result)
 	return &result, err
 }
 
-func (f *crdclient) Update(obj *crd.SSH) (*crd.SSH, error) {
-	var result crd.SSH
+func (f *crdclient) Update(obj *crd.SshUser) (*crd.SshUser, error) {
+	var result crd.SshUser
 	err := f.cl.Put().Namespace(f.ns).Resource(f.plural).Body(obj).Do().Into(&result)
 	return &result, err
 }
@@ -47,14 +47,14 @@ func (f *crdclient) Delete(name string, options *meta_v1.DeleteOptions) error {
 	return f.cl.Delete().Namespace(f.ns).Resource(f.plural).Name(name).Body(options).Do().Error()
 }
 
-func (f *crdclient) Get(name string) (*crd.SSH, error) {
-	var result crd.SSH
+func (f *crdclient) Get(name string) (*crd.SshUser, error) {
+	var result crd.SshUser
 	err := f.cl.Get().Namespace(f.ns).Resource(f.plural).Name(name).Do().Into(&result)
 	return &result, err
 }
 
-func (f *crdclient) List(opts meta_v1.ListOptions) (*crd.SSHList, error) {
-	var result crd.SSHList
+func (f *crdclient) List(opts meta_v1.ListOptions) (*crd.SshUserList, error) {
+	var result crd.SshUserList
 	err := f.cl.Get().Namespace(f.ns).Resource(f.plural).VersionedParams(&opts, f.codec).Do().Into(&result)
 	return &result, err
 }

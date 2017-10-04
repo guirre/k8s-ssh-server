@@ -1,0 +1,9 @@
+version: "3"
+services:
+  apiserver:
+    build: mockerfiles/apiserver
+    ports:
+      - "8080:8080"
+  etcd:
+    build: mockerfiles/etcd
+    network_mode: service:apiserver

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Plural      string = "ssh"
+	Plural      string = "sshusers"
 	Group       string = "skpr.io"
 	Version     string = "v1"
 	FullCRDName string = Plural + "." + Group
@@ -32,7 +32,7 @@ func Create(clientset apiextcs.Interface) error {
 			Scope:   apiextv1beta1.NamespaceScoped,
 			Names: apiextv1beta1.CustomResourceDefinitionNames{
 				Plural: Plural,
-				Kind:   reflect.TypeOf(SSH{}).Name(),
+				Kind:   reflect.TypeOf(SshUser{}).Name(),
 			},
 		},
 	}
@@ -46,19 +46,20 @@ func Create(clientset apiextcs.Interface) error {
 }
 
 // Definition of our CRD Example class
-type SSH struct {
+type SshUser struct {
 	meta_v1.TypeMeta   `json:",inline"`
 	meta_v1.ObjectMeta `json:"metadata"`
-	Spec               SSHSpec `json:"spec"`
+	Spec               SshUserSpec `json:"spec"`
 }
-type SSHSpec struct {
+type SshUserSpec struct {
+	Groups         []string `json:"groups"`
 	AuthorizedKeys []string `json:"authorizedKeys"`
 }
 
-type SSHList struct {
+type SshUserList struct {
 	meta_v1.TypeMeta `json:",inline"`
 	meta_v1.ListMeta `json:"metadata"`
-	Items            []SSH `json:"items"`
+	Items            []SshUser `json:"items"`
 }
 
 var SchemeGroupVersion = schema.GroupVersion{
@@ -68,8 +69,8 @@ var SchemeGroupVersion = schema.GroupVersion{
 
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&SSH{},
-		&SSHList{},
+		&SshUser{},
+		&SshUserList{},
 	)
 
 	meta_v1.AddToGroupVersion(scheme, SchemeGroupVersion)
