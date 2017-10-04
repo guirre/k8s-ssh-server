@@ -1,24 +1,20 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/gliderlabs/ssh"
 	promlog "github.com/prometheus/common/log"
 	gossh "golang.org/x/crypto/ssh"
-	"k8s.io/api/core/v1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/kubernetes/pkg/api"
+	k8sclient "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 
 	"github.com/previousnext/k8s-ssh/client"
 	"github.com/previousnext/k8s-ssh/crd"
@@ -55,6 +51,11 @@ func main() {
 	}
 
 	clientset, err := apiextcs.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	coreclient, err := k8sclient.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -96,12 +97,13 @@ func main() {
 		logger.Print(fmt.Sprintf("Starting connection for user: %s", user))
 
 		// These are default options which will be sent to the Kubernetes API.
-		cmd := &v1.PodExecOptions{
+		cmd := &api.PodExecOptions{
 			Container: container,
 			Stdout:    true,
 			Stderr:    true,
 			Command:   sess.Command(),
 		}
+
 		opts := remotecommand.StreamOptions{
 			Stdout: sess,
 			Stderr: sess.Stderr(),
@@ -138,9 +140,11 @@ func main() {
 			opts.TerminalSizeQueue = sizeQueue
 		}
 
-		crdclient := client.Client(crdcs, scheme, namespace)
+		url := coreclient.Core().RESTClient().Post().Resource("pods").Name(pod).Namespace(namespace).SubResource("exec").Param("container", container).VersionedParams(cmd, api.ParameterCodec).URL()
 
-		exec, err := remotecommand.NewExecutor(config, "POST", crdclient.URL(pod, container, cmd))
+		logger.Print(url.String())
+
+		exec, err := remotecommand.NewExecutor(config, "POST", url)
 		if err != nil {
 			logger.Print(fmt.Sprintf("Failed to run command '%s' as %s: %s", strings.Join(cmd.Command, " "), user, err.Error()))
 
@@ -202,7 +206,12 @@ func main() {
 
 	// Check if a signer was provided, if one was, load it and add to the server.
 	if *cliSigner != "" {
-		signer, err := getSigner(*cliSigner)
+		file, err := ioutil.ReadFile(*cliSigner)
+		if err != nil {
+			panic(err)
+		}
+
+		signer, err := gossh.ParsePrivateKey(file)
 		if err != nil {
 			panic(err)
 		}
@@ -214,36 +223,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// Helper function to generate a signer certificate if one does not exist.
-func getSigner(path string) (ssh.Signer, error) {
-	var signer ssh.Signer
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		key, err := rsa.GenerateKey(rand.Reader, 768)
-		if err != nil {
-			return signer, err
-		}
-
-		priv_der := x509.MarshalPKCS1PrivateKey(key)
-
-		priv_blk := pem.Block{
-			Type:    "RSA PRIVATE KEY",
-			Headers: nil,
-			Bytes:   priv_der,
-		}
-
-		err = ioutil.WriteFile(path, pem.EncodeToMemory(&priv_blk), 0644)
-		if err != nil {
-			return signer, err
-		}
-	}
-
-	file, err := ioutil.ReadFile(path)
-	if err != nil {
-		return signer, err
-	}
-
-	return gossh.ParsePrivateKey(file)
 }

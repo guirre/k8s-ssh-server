@@ -1,9 +1,6 @@
 package client
 
 import (
-	"net/url"
-
-	"k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,9 +59,4 @@ func (f *crdclient) List(opts meta_v1.ListOptions) (*crd.SshUserList, error) {
 // Create a new List watch for our TPR
 func (f *crdclient) NewListWatch() *cache.ListWatch {
 	return cache.NewListWatchFromClient(f.cl, f.plural, f.ns, fields.Everything())
-}
-
-// URL returns a url to the resource.
-func (f *crdclient) URL(pod, container string, cmd *v1.PodExecOptions) *url.URL {
-	return f.cl.Post().Resource("pods").Name(pod).Namespace(f.ns).SubResource("exec").Param("container", container).VersionedParams(cmd, meta_v1.ParameterCodec).URL()
 }

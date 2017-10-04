@@ -3,7 +3,7 @@ package crd
 import (
 	"reflect"
 
-	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,15 +22,15 @@ const (
 
 // Create the CRD resource, ignore error if it already exists
 func Create(clientset apiextcs.Interface) error {
-	definition := &apiextv1beta1.CustomResourceDefinition{
+	definition := &v1beta1.CustomResourceDefinition{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: FullCRDName,
 		},
-		Spec: apiextv1beta1.CustomResourceDefinitionSpec{
+		Spec: v1beta1.CustomResourceDefinitionSpec{
 			Group:   Group,
 			Version: Version,
-			Scope:   apiextv1beta1.NamespaceScoped,
-			Names: apiextv1beta1.CustomResourceDefinitionNames{
+			Scope:   v1beta1.NamespaceScoped,
+			Names: v1beta1.CustomResourceDefinitionNames{
 				Plural: Plural,
 				Kind:   reflect.TypeOf(SshUser{}).Name(),
 			},
