@@ -26,9 +26,9 @@ import (
 )
 
 var (
-	cliListen = kingpin.Flag("listen", "Port to receive SSH requests").Default(":22").OverrideDefaultFromEnvar("LISTEN").String()
-	cliSigner = kingpin.Flag("signer", "Path to signer certificate").OverrideDefaultFromEnvar("SIGNER").String()
-	cliShell  = kingpin.Flag("shell", "Shell type to use if the user requests a Shell session").Default("/bin/bash").OverrideDefaultFromEnvar("SIGNER").String()
+	cliListen = kingpin.Flag("listen", "Port to receive SSH requests").Default(":22").OverrideDefaultFromEnvar("SSH_LISTEN").String()
+	cliSigner = kingpin.Flag("signer", "Path to signer certificate").OverrideDefaultFromEnvar("SSH_SIGNERS").String()
+	cliShell  = kingpin.Flag("shell", "Shell type to use if the user requests a Shell session").Default("/bin/bash").OverrideDefaultFromEnvar("SSH_SHELL").String()
 )
 
 func main() {
